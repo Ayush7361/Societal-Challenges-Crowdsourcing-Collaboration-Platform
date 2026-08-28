@@ -23,6 +23,25 @@ const ProposalSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  valueDrivers: {
+    type: [String],
+    default: [],
+  },
+  csrTheme: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  localAdaptation: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  talentPlan: {
+    type: String,
+    default: '',
+    trim: true,
+  },
   status: {
     type: String,
     enum: ['Pending', 'Selected', 'Rejected'],

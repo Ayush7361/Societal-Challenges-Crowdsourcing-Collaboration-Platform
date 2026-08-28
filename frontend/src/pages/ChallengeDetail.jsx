@@ -17,6 +17,7 @@ const ChallengeDetail = () => {
   const [progressUpdates, setProgressUpdates] = useState([]);
   const [comments, setComments] = useState([]);
   const [hasVoted, setHasVoted] = useState(false);
+  const [similar, setSimilar] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -50,6 +51,24 @@ const ChallengeDetail = () => {
 
       setComments(commentsRes.data);
       setProgressUpdates(progressRes.data);
+
+      if (user?.role === 'admin' && !res.data.mergedInto) {
+        try {
+          const params = new URLSearchParams({
+            title: res.data.title || '',
+            category: res.data.category || '',
+            excludeId: id,
+          });
+          if (res.data.district) params.set('district', res.data.district);
+          if (res.data.locality) params.set('locality', res.data.locality);
+          const simRes = await API.get(`/challenges/similar?${params.toString()}`);
+          setSimilar(simRes.data || []);
+        } catch (e) {
+          setSimilar([]);
+        }
+      } else {
+        setSimilar([]);
+      }
 
       // Fetch proposals if user is logged in
       if (user) {
@@ -177,6 +196,19 @@ const ChallengeDetail = () => {
     }
   };
 
+  const handleMerge = async (duplicateId, duplicateTitle) => {
+    if (!window.confirm(`Merge “${duplicateTitle}” into this report? It will leave the public feed and its votes will be added here.`)) {
+      return;
+    }
+    try {
+      await API.post(`/challenges/${id}/merge`, { duplicateId });
+      setMsg('Duplicate merged into this report.');
+      fetchChallengeDetails();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to merge');
+    }
+  };
+
   const severityBadgeClass = (level) => {
     switch (level) {
       case 'Critical':
@@ -226,6 +258,21 @@ const ChallengeDetail = () => {
       {msg && (
         <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-sm font-medium shadow-sm">
           {msg}
+        </div>
+      )}
+
+      {challenge.mergedInto && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-xl text-sm">
+          This report was merged into the main issue:{' '}
+          <Link to={`/challenges/${challenge.mergedInto._id || challenge.mergedInto}`} className="font-bold underline">
+            {challenge.mergedInto.title || 'Open main report'}
+          </Link>
+        </div>
+      )}
+
+      {challenge.mergedCount > 0 && (
+        <div className="bg-slate-100 border border-slate-200 text-slate-700 p-3 rounded-xl text-xs font-medium">
+          {challenge.mergedCount} similar report{challenge.mergedCount === 1 ? '' : 's'} merged into this one.
         </div>
       )}
 

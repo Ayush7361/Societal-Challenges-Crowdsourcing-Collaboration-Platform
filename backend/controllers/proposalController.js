@@ -6,12 +6,18 @@ const Challenge = require('../models/Challenge');
 // @access  Institution / Private
 const submitProposal = async (req, res) => {
   try {
-    const { solution, estimatedCost, timeline } = req.body;
+    const { solution, estimatedCost, timeline, valueDrivers, csrTheme, localAdaptation, talentPlan } = req.body;
     const challengeId = req.params.id;
 
     if (!solution || !estimatedCost || !timeline) {
       return res.status(400).json({ message: 'Solution, estimated cost, and timeline are required' });
     }
+
+    const drivers = Array.isArray(valueDrivers)
+      ? valueDrivers
+      : typeof valueDrivers === 'string'
+        ? valueDrivers.split(',').map((d) => d.trim()).filter(Boolean)
+        : [];
 
     const challenge = await Challenge.findById(challengeId);
     if (!challenge) {
@@ -30,6 +36,10 @@ const submitProposal = async (req, res) => {
       solution: solution.trim(),
       estimatedCost: formattedCost,
       timeline: timeline.trim(),
+      valueDrivers: drivers,
+      csrTheme: (csrTheme || '').trim(),
+      localAdaptation: (localAdaptation || '').trim(),
+      talentPlan: (talentPlan || '').trim(),
       status: 'Pending',
     });
 
@@ -45,7 +55,7 @@ const submitProposal = async (req, res) => {
       await challenge.save();
     }
 
-    const populatedProposal = await Proposal.findById(proposal._id).populate('submittedBy', 'name organization email role');
+    const populatedProposal = await Proposal.findById(proposal._id).populate('submittedBy', 'name organization email role partnerType participationInterests');
     res.status(201).json(populatedProposal);
   } catch (error) {
     console.error('Submit Proposal Error:', error);
@@ -59,7 +69,7 @@ const submitProposal = async (req, res) => {
 const getProposals = async (req, res) => {
   try {
     const proposals = await Proposal.find({ challenge: req.params.id })
-      .populate('submittedBy', 'name organization email role')
+      .populate('submittedBy', 'name organization email role partnerType participationInterests')
       .sort({ createdAt: -1 });
 
     res.json(proposals);

@@ -1,32 +1,30 @@
 const mongoose = require('mongoose');
 
-const ProgressUpdateSchema = new mongoose.Schema({
+const GroundCheckSchema = new mongoose.Schema({
   challenge: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Challenge',
     required: true,
   },
-  postedBy: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
-  text: {
+  verdict: {
     type: String,
+    enum: ['Working', 'Improved', 'Unchanged', 'Worsened'],
     required: true,
   },
-  image: {
-    type: String,
-    default: '',
-  },
-  measuredMetric: {
+  observedMetric: {
     type: String,
     default: '',
     trim: true,
   },
-  isOutcomeClaim: {
-    type: Boolean,
-    default: false,
+  note: {
+    type: String,
+    default: '',
+    trim: true,
   },
   createdAt: {
     type: Date,
@@ -34,4 +32,6 @@ const ProgressUpdateSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('ProgressUpdate', ProgressUpdateSchema);
+GroundCheckSchema.index({ challenge: 1, user: 1 }, { unique: true });
+
+module.exports = mongoose.model('GroundCheck', GroundCheckSchema);

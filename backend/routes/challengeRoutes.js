@@ -9,6 +9,10 @@ const {
   addComment,
   getComments,
   checkHasVoted,
+  submitGroundCheck,
+  getGroundChecks,
+  findSimilarChallenges,
+  mergeChallenges,
 } = require('../controllers/challengeController');
 const { submitProposal, getProposals } = require('../controllers/proposalController');
 const { postProgressUpdate, getProgressUpdates } = require('../controllers/progressController');
@@ -19,24 +23,30 @@ const upload = require('../middleware/upload');
 router
   .route('/')
   .post(
-  '/',
-  protect,
-  upload.fields([
-    { name: 'image', maxCount: 1 },
-    { name: 'evidence', maxCount: 4 },
-  ]),
-  createChallenge
-);
+    protect,
+    upload.fields([
+      { name: 'image', maxCount: 1 },
+      { name: 'evidence', maxCount: 4 },
+    ]),
+    createChallenge
+  )
   .get(getChallenges);
+
+router.get('/similar', findSimilarChallenges);
 
 router.route('/:id').get(getChallengeById);
 
 router.route('/:id/status').patch(protect, authorize('admin'), updateChallengeStatus);
+router.route('/:id/merge').post(protect, authorize('admin'), mergeChallenges);
 
 // Voting & comments
 router.route('/:id/vote').post(protect, voteChallenge);
 router.route('/:id/hasVoted').get(protect, checkHasVoted);
 router.route('/:id/comments').post(protect, addComment).get(getComments);
+router
+  .route('/:id/ground-check')
+  .post(protect, authorize('citizen', 'admin'), submitGroundCheck)
+  .get(getGroundChecks);
 
 // Proposals for challenge
 router

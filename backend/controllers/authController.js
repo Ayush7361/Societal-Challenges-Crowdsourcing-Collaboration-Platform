@@ -13,7 +13,7 @@ const generateToken = (id) => {
 // @access  Public
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role, organization } = req.body;
+    const { name, email, password, role, organization, partnerType, participationInterests } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Please provide name, email, and password' });
@@ -29,12 +29,20 @@ const registerUser = async (req, res) => {
 
     const userRole = role && ['citizen', 'institution', 'admin'].includes(role) ? role : 'citizen';
 
+    const interests = Array.isArray(participationInterests)
+      ? participationInterests
+      : typeof participationInterests === 'string'
+        ? participationInterests.split(',').map((d) => d.trim()).filter(Boolean)
+        : [];
+
     const user = await User.create({
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
       role: userRole,
       organization: userRole === 'institution' ? organization || '' : '',
+      partnerType: userRole === 'institution' && ['academic', 'industry'].includes(partnerType) ? partnerType : '',
+      participationInterests: userRole === 'institution' ? interests : [],
     });
 
     res.status(201).json({
@@ -43,6 +51,8 @@ const registerUser = async (req, res) => {
       email: user.email,
       role: user.role,
       organization: user.organization,
+      partnerType: user.partnerType,
+      participationInterests: user.participationInterests,
       token: generateToken(user._id),
     });
   } catch (error) {
@@ -78,6 +88,8 @@ const loginUser = async (req, res) => {
       email: user.email,
       role: user.role,
       organization: user.organization,
+      partnerType: user.partnerType,
+      participationInterests: user.participationInterests,
       token: generateToken(user._id),
     });
   } catch (error) {

@@ -26,6 +26,15 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  partnerType: {
+    type: String,
+    enum: ['academic', 'industry', ''],
+    default: '',
+  },
+  participationInterests: {
+    type: [String],
+    default: [],
+  },
   createdAt: {
     type: Date,
     default: Date.now,

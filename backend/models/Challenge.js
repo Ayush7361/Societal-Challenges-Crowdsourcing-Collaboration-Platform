@@ -35,6 +35,51 @@ const ChallengeSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  state: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  district: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  locality: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  landmark: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  pincode: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  regionType: {
+    type: String,
+    enum: ['Urban', 'Rural', 'Tribal', 'Peri-urban'],
+    default: 'Rural',
+  },
+  affectedWho: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  localContext: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  baselineMetric: {
+    type: String,
+    default: '',
+    trim: true,
+  },
   category: {
     type: String,
     required: true,
@@ -71,10 +116,33 @@ const ChallengeSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  mergedInto: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Challenge',
+    default: null,
+  },
+  mergedCount: {
+    type: Number,
+    default: 0,
+  },
   selectedProposal: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Proposal',
     default: null,
+  },
+  outcomeClaimed: {
+    type: Boolean,
+    default: false,
+  },
+  claimedMetric: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  claimedNote: {
+    type: String,
+    default: '',
+    trim: true,
   },
   statusHistory: [StatusHistorySchema],
   createdAt: {

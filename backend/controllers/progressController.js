@@ -6,7 +6,7 @@ const Challenge = require('../models/Challenge');
 // @access  Institution / Private
 const postProgressUpdate = async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, measuredMetric, isOutcomeClaim } = req.body;
     const challengeId = req.params.id;
 
     if (!text || !text.trim()) {
@@ -23,12 +23,23 @@ const postProgressUpdate = async (req, res) => {
       imagePath = `/uploads/${req.file.filename}`;
     }
 
+    const claim = isOutcomeClaim === true || isOutcomeClaim === 'true';
+
     const progressUpdate = await ProgressUpdate.create({
       challenge: challengeId,
       postedBy: req.user._id,
       text: text.trim(),
       image: imagePath,
+      measuredMetric: (measuredMetric || '').trim(),
+      isOutcomeClaim: claim,
     });
+
+    if (claim) {
+      challenge.outcomeClaimed = true;
+      challenge.claimedMetric = (measuredMetric || '').trim();
+      challenge.claimedNote = text.trim();
+      await challenge.save();
+    }
 
     const populatedUpdate = await ProgressUpdate.findById(progressUpdate._id).populate('postedBy', 'name organization role email');
     res.status(201).json(populatedUpdate);
