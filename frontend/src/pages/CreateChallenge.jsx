@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import API from '../services/api';
+import LocationPickerMap from '../components/LocationPickerMap';
 import { PlusCircle, Upload, MapPin, Tag, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 const CreateChallenge = () => {
@@ -13,6 +14,7 @@ const CreateChallenge = () => {
   const [locality, setLocality] = useState('');
   const [landmark, setLandmark] = useState('');
   const [pincode, setPincode] = useState('');
+  const [coords, setCoords] = useState(null);
   const [regionType, setRegionType] = useState('Rural');
   const [category, setCategory] = useState('Water & Sanitation');
   const [severity, setSeverity] = useState('Medium');
@@ -96,6 +98,10 @@ const CreateChallenge = () => {
       formData.append('locality', locality.trim());
       formData.append('landmark', landmark.trim());
       formData.append('pincode', pincode.trim());
+      if (coords?.lat && coords?.lng) {
+        formData.append('latitude', coords.lat);
+        formData.append('longitude', coords.lng);
+      }
       formData.append('regionType', regionType);
       formData.append('category', category);
       formData.append('severity', severity);
@@ -275,6 +281,14 @@ const CreateChallenge = () => {
               placeholder="Landmark (school, haat, tank, lane number)"
               className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white"
             />
+
+            <div className="pt-2 border-t border-slate-200">
+              <LocationPickerMap
+                initialLat={coords?.lat}
+                initialLng={coords?.lng}
+                onChange={(pos) => setCoords(pos)}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

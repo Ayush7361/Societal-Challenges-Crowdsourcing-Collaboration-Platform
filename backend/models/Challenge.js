@@ -60,6 +60,14 @@ const ChallengeSchema = new mongoose.Schema({
     default: '',
     trim: true,
   },
+  latitude: {
+    type: Number,
+    default: null,
+  },
+  longitude: {
+    type: Number,
+    default: null,
+  },
   regionType: {
     type: String,
     enum: ['Urban', 'Rural', 'Tribal', 'Peri-urban'],

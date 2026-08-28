@@ -82,6 +82,8 @@ const seedData = async () => {
         locality: 'Kathikund',
         landmark: 'GMS Kathikund campus, opposite weekly haat',
         pincode: '814103',
+        latitude: 24.2657,
+        longitude: 87.2472,
         regionType: 'Rural',
         affectedWho: 'About 220 school children and 40 neighbouring Adivasi households who depend on this single handpump.',
         localContext:
@@ -122,6 +124,8 @@ const seedData = async () => {
       existingPilot.locality = 'Kathikund';
       existingPilot.landmark = 'GMS Kathikund campus, opposite weekly haat';
       existingPilot.pincode = '814103';
+      existingPilot.latitude = 24.2657;
+      existingPilot.longitude = 87.2472;
       existingPilot.regionType = 'Rural';
       existingPilot.affectedWho =
         'About 220 school children and 40 neighbouring Adivasi households who depend on this single handpump.';
@@ -147,6 +151,8 @@ const seedData = async () => {
         locality: 'Ward 12, Doranda',
         landmark: 'Lane 4, behind Government Girls High School',
         pincode: '834001',
+        latitude: 23.3441,
+        longitude: 85.3096,
         regionType: 'Urban',
         affectedWho: 'About 180 apartments and 12 street-vending families on Lane 4 who buy tanker water daily.',
         localContext:

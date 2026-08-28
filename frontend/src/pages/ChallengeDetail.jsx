@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import API from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import StatusTimeline from '../components/StatusTimeline';
+import ChallengeMapDisplay from '../components/ChallengeMapDisplay';
 import {
   MapPin, ThumbsUp, MessageSquare, Building2, ShieldCheck,
   CheckCircle2, Clock, Upload, ArrowLeft, Send, Sparkles, AlertCircle
@@ -324,6 +325,10 @@ const ChallengeDetail = () => {
             </div>
           </div>
         )}
+
+        <div className="mb-6">
+          <ChallengeMapDisplay challenge={challenge} />
+        </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-4">
           <div className="text-xs text-slate-500">

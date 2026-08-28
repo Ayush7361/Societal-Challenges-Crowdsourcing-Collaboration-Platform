@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import API from '../services/api';
 import ChallengeCard from '../components/ChallengeCard';
-import { Search, Filter, AlertCircle, RefreshCw } from 'lucide-react';
+import ChallengeMapDisplay from '../components/ChallengeMapDisplay';
+import { Search, Filter, AlertCircle, RefreshCw, LayoutGrid, MapPin } from 'lucide-react';
 
 const Home = () => {
   const [challenges, setChallenges] = useState([]);
@@ -10,6 +11,7 @@ const Home = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState('grid');
 
   const fetchChallenges = async () => {
     setLoading(true);
@@ -113,6 +115,29 @@ const Home = () => {
             <option value="Environment">Environment</option>
           </select>
 
+          <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" /> Grid
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                viewMode === 'map'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <MapPin className="w-3.5 h-3.5 text-rose-500" /> Map
+            </button>
+          </div>
+
           <button
             onClick={fetchChallenges}
             className="p-2 text-slate-500 hover:text-brand-600 border border-slate-200 rounded-lg bg-white"
@@ -124,7 +149,7 @@ const Home = () => {
 
       </div>
 
-      {/* Challenges Feed Grid */}
+      {/* Challenges Feed Content */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
@@ -148,6 +173,8 @@ const Home = () => {
           <h3 className="text-lg font-bold text-slate-800">No challenges found</h3>
           <p className="text-sm text-slate-500 mt-1">Try clearing your search query or filters.</p>
         </div>
+      ) : viewMode === 'map' ? (
+        <ChallengeMapDisplay challenges={filteredChallenges} height="500px" />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredChallenges.map((challenge) => (
