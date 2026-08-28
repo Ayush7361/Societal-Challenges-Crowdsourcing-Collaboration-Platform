@@ -7,15 +7,20 @@ const Comment = require('../models/Comment');
 // @access  Citizen / Private
 const createChallenge = async (req, res) => {
   try {
-    const { title, description, location, category } = req.body;
+    const { title, description, location, category, severity, affectedCount } = req.body;
 
     if (!title || !description || !location || !category) {
       return res.status(400).json({ message: 'Title, description, location, and category are required' });
     }
 
     let imagePath = '';
-    if (req.file) {
-      imagePath = `/uploads/${req.file.filename}`;
+    if (req.files?.image?.[0]) {
+      imagePath = `/uploads/${req.files.image[0].filename}`;
+    }
+
+    let evidencePaths = [];
+    if (req.files?.evidence) {
+      evidencePaths = req.files.evidence.map((f) => `/uploads/${f.filename}`);
     }
 
     const initialStatus = 'Pending';
@@ -25,6 +30,9 @@ const createChallenge = async (req, res) => {
       location,
       category,
       image: imagePath,
+      severity: severity || 'Medium',
+      affectedCount: Number(affectedCount) || 0,
+      evidence: evidencePaths,
       status: initialStatus,
       createdBy: req.user._id,
       statusHistory: [

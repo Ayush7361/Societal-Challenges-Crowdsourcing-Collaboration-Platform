@@ -10,8 +10,11 @@ const CreateChallenge = () => {
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState('Water & Sanitation');
+  const [severity, setSeverity] = useState('Medium');
+  const [affectedCount, setAffectedCount] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [evidenceFiles, setEvidenceFiles] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,6 +26,10 @@ const CreateChallenge = () => {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
+  };
+
+  const handleEvidenceChange = (e) => {
+    setEvidenceFiles(Array.from(e.target.files).slice(0, 4));
   };
 
   const handleSubmit = async (e) => {
@@ -43,9 +50,12 @@ const CreateChallenge = () => {
       formData.append('description', description.trim());
       formData.append('location', location.trim());
       formData.append('category', category);
+      formData.append('severity', severity);
+      formData.append('affectedCount', affectedCount || 0);
       if (imageFile) {
         formData.append('image', imageFile);
       }
+      evidenceFiles.forEach((file) => formData.append('evidence', file));
 
       const res = await API.post('/challenges', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -66,7 +76,7 @@ const CreateChallenge = () => {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-        
+
         <div className="mb-6 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-2 text-brand-600 font-bold text-sm mb-1 uppercase tracking-wider">
             <PlusCircle className="w-4 h-4" /> Citizen Portal
@@ -92,7 +102,7 @@ const CreateChallenge = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          
+
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
               Challenge Title *
@@ -148,6 +158,38 @@ const CreateChallenge = () => {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Severity
+              </label>
+              <select
+                value={severity}
+                onChange={(e) => setSeverity(e.target.value)}
+                className="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 bg-white"
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                People Affected (approx.)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={affectedCount}
+                onChange={(e) => setAffectedCount(e.target.value)}
+                placeholder="e.g. 200"
+                className="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
               Detailed Description *
@@ -188,6 +230,22 @@ const CreateChallenge = () => {
                 </div>
               )}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Additional Evidence Photos (Optional, up to 4)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleEvidenceChange}
+              className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700"
+            />
+            {evidenceFiles.length > 0 && (
+              <p className="text-[11px] text-slate-400 mt-1">{evidenceFiles.length} file(s) selected</p>
+            )}
           </div>
 
           <div className="pt-3">

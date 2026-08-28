@@ -24,7 +24,7 @@ const ChallengeDetail = () => {
 
   // Form states
   const [commentText, setCommentText] = useState('');
-  
+
   // Proposal form state
   const [solution, setSolution] = useState('');
   const [estimatedCost, setEstimatedCost] = useState('₹18,000');
@@ -177,6 +177,20 @@ const ChallengeDetail = () => {
     }
   };
 
+  const severityBadgeClass = (level) => {
+    switch (level) {
+      case 'Critical':
+        return 'bg-rose-100 text-rose-700';
+      case 'High':
+        return 'bg-orange-100 text-orange-700';
+      case 'Low':
+        return 'bg-slate-100 text-slate-600';
+      case 'Medium':
+      default:
+        return 'bg-amber-100 text-amber-700';
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -201,7 +215,7 @@ const ChallengeDetail = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      
+
       {/* Back button */}
       <div>
         <Link to="/" className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-brand-600 transition-colors">
@@ -217,13 +231,21 @@ const ChallengeDetail = () => {
 
       {/* Main Detail Header Card */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm">
-        
+
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <span className="text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-md">
             {challenge.category}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-slate-500 font-medium">📍 {challenge.location}</span>
+            <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${severityBadgeClass(challenge.severity)}`}>
+              {challenge.severity || 'Medium'} Severity
+            </span>
+            {challenge.affectedCount > 0 && (
+              <span className="text-xs text-slate-500 font-medium">
+                👥 ~{challenge.affectedCount} people affected
+              </span>
+            )}
           </div>
         </div>
 
@@ -238,6 +260,21 @@ const ChallengeDetail = () => {
         {challenge.image && (
           <div className="mb-6 rounded-xl overflow-hidden max-h-96 border border-slate-200 bg-slate-100">
             <img src={challenge.image} alt={challenge.title} className="w-full h-full object-cover" />
+          </div>
+        )}
+
+        {challenge.evidence?.length > 0 && (
+          <div className="mb-6">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Additional Evidence
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {challenge.evidence.map((url, i) => (
+                <div key={i} className="rounded-lg overflow-hidden h-24 border border-slate-200 bg-slate-100">
+                  <img src={url} alt={`evidence-${i}`} className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

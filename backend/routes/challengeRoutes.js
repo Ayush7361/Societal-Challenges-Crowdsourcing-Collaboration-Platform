@@ -18,7 +18,15 @@ const upload = require('../middleware/upload');
 // Base challenge routes
 router
   .route('/')
-  .post(protect, upload.single('image'), createChallenge)
+  .post(
+  '/',
+  protect,
+  upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'evidence', maxCount: 4 },
+  ]),
+  createChallenge
+);
   .get(getChallenges);
 
 router.route('/:id').get(getChallengeById);

@@ -44,6 +44,19 @@ const ChallengeSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  severity: {
+    type: String,
+    enum: ['Low', 'Medium', 'High', 'Critical'],
+    default: 'Medium',
+  },
+  affectedCount: {
+    type: Number,
+    default: 0,
+  },
+  evidence: {
+    type: [String],
+    default: [],
+  },
   status: {
     type: String,
     enum: ['Pending', 'Open', 'Under Review', 'In Progress', 'Resolved'],
