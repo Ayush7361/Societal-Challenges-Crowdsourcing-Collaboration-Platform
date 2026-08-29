@@ -122,8 +122,8 @@ const Home = () => {
             onChange={(e) => setSortBy(e.target.value)}
             className="px-3 py-2 text-xs font-semibold bg-brand-50 border border-brand-200 rounded-lg text-brand-800 focus:ring-brand-500"
           >
-            <option value="votes">🔥 Sort by Most Voted</option>
-            <option value="newest">🕒 Sort by Newest</option>
+            <option value="votes">Sort by Most Voted</option>
+            <option value="newest">Sort by Newest</option>
           </select>
 
           <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
