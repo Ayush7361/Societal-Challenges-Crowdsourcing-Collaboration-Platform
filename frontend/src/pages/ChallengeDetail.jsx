@@ -44,14 +44,19 @@ const ChallengeDetail = () => {
       const res = await API.get(`/challenges/${id}`);
       setChallenge(res.data);
 
-      // Fetch comments & progress updates
-      const [commentsRes, progressRes] = await Promise.all([
-        API.get(`/challenges/${id}/comments`),
-        API.get(`/challenges/${id}/progress`),
-      ]);
+      try {
+        const commentsRes = await API.get(`/challenges/${id}/comments`);
+        setComments(commentsRes.data || []);
+      } catch (e) {
+        setComments([]);
+      }
 
-      setComments(commentsRes.data);
-      setProgressUpdates(progressRes.data);
+      try {
+        const progressRes = await API.get(`/challenges/${id}/progress`);
+        setProgressUpdates(progressRes.data || []);
+      } catch (e) {
+        setProgressUpdates([]);
+      }
 
       if (user?.role === 'admin' && !res.data.mergedInto) {
         try {

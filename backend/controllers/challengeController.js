@@ -175,6 +175,13 @@ const getChallengeById = async (req, res) => {
       })
       .populate('statusHistory.changedBy', 'name role organization')
       .populate('mergedInto', 'title status');
+
+    if (!challenge) {
+      return res.status(404).json({ message: 'Challenge not found' });
+    }
+
+    const ground = await summarizeGroundChecks(req.params.id);
+
     res.json({
       ...challenge.toObject(),
       groundChecks: ground.checks,
@@ -183,7 +190,7 @@ const getChallengeById = async (req, res) => {
     });
   } catch (error) {
     console.error('Get Challenge By ID Error:', error);
-    res.status(500).json({ message: 'Server error fetching challenge details' });
+    res.status(500).json({ message: 'Server error fetching challenge details', error: error.message });
   }
 };
 
