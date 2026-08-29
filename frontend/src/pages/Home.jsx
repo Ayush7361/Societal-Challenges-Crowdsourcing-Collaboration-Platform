@@ -10,6 +10,7 @@ const Home = () => {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [sortBy, setSortBy] = useState('votes');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
 
@@ -20,6 +21,7 @@ const Home = () => {
       let queryParams = [];
       if (statusFilter) queryParams.push(`status=${encodeURIComponent(statusFilter)}`);
       if (categoryFilter) queryParams.push(`category=${encodeURIComponent(categoryFilter)}`);
+      if (sortBy) queryParams.push(`sort=${encodeURIComponent(sortBy)}`);
       
       const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
       const res = await API.get(`/challenges${queryString}`);
@@ -40,7 +42,7 @@ const Home = () => {
 
   useEffect(() => {
     fetchChallenges();
-  }, [statusFilter, categoryFilter]);
+  }, [statusFilter, categoryFilter, sortBy]);
 
   const filteredChallenges = challenges.filter(c => 
     c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -113,6 +115,15 @@ const Home = () => {
             <option value="Infrastructure">Infrastructure</option>
             <option value="Health">Health</option>
             <option value="Environment">Environment</option>
+          </select>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-3 py-2 text-xs font-semibold bg-brand-50 border border-brand-200 rounded-lg text-brand-800 focus:ring-brand-500"
+          >
+            <option value="votes">🔥 Sort by Most Voted</option>
+            <option value="newest">🕒 Sort by Newest</option>
           </select>
 
           <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">

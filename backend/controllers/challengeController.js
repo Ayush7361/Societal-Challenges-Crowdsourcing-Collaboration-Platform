@@ -147,13 +147,18 @@ const getChallenges = async (req, res) => {
       filter.mergedInto = null;
     }
 
+    let sortOption = { createdAt: -1 };
+    if (req.query.sort === 'votes') {
+      sortOption = { votesCount: -1, createdAt: -1 };
+    }
+
     const challenges = await Challenge.find(filter)
       .populate('createdBy', 'name email role organization')
       .populate({
         path: 'selectedProposal',
         populate: { path: 'submittedBy', select: 'name organization email partnerType' },
       })
-      .sort({ createdAt: -1 });
+      .sort(sortOption);
 
     res.json(challenges);
   } catch (error) {
