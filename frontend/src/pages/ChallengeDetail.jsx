@@ -7,14 +7,16 @@ import ChallengeMapDisplay from '../components/ChallengeMapDisplay';
 import { getImageUrl } from '../utils/imageUrl';
 import {
   MapPin, ThumbsUp, MessageSquare, Building2, ShieldCheck,
-  CheckCircle2, Clock, Upload, ArrowLeft, Send, Sparkles, AlertCircle
+  CheckCircle2, Clock, Upload, ArrowLeft, Send, Sparkles, AlertCircle, Image as ImageIcon
 } from 'lucide-react';
 
 const ChallengeDetail = () => {
   const { id } = useParams();
   const { user } = useContext(AuthContext);
 
+  const [imageError, setImageError] = useState(false);
   const [challenge, setChallenge] = useState(null);
+
   const [proposals, setProposals] = useState([]);
   const [progressUpdates, setProgressUpdates] = useState([]);
   const [comments, setComments] = useState([]);
@@ -396,10 +398,23 @@ const ChallengeDetail = () => {
           {challenge.description}
         </p>
 
-        {challenge.image && (
+        {challenge.image ? (
           <div className="mb-6">
-            <div className="rounded-xl overflow-hidden max-h-96 border border-slate-200 bg-slate-100 relative">
-              <img src={getImageUrl(challenge.image)} alt={challenge.title} className="w-full h-full object-cover" />
+            <div className="rounded-xl overflow-hidden min-h-[200px] border border-slate-200 bg-slate-900 relative group flex items-center justify-center">
+              {!imageError ? (
+                <img
+                  src={getImageUrl(challenge.image)}
+                  alt={challenge.title}
+                  className="w-full max-h-96 object-contain bg-slate-950"
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <div className="p-8 text-center text-slate-400 space-y-2">
+                  <ImageIcon className="w-10 h-10 mx-auto text-slate-500 opacity-60" />
+                  <p className="text-xs font-semibold text-slate-300">Ground Evidence Photo</p>
+                  <p className="text-[11px] text-slate-400">Attached evidence file: {challenge.image}</p>
+                </div>
+              )}
             </div>
             {challenge.exifVerified && (
               <div className="mt-2 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-lg p-3 text-xs flex flex-wrap items-center justify-between gap-2 shadow-sm">
@@ -413,7 +428,14 @@ const ChallengeDetail = () => {
               </div>
             )}
           </div>
+        ) : (
+          <div className="mb-6 rounded-xl border border-dashed border-slate-300 p-5 text-center bg-slate-50 text-slate-500 space-y-1">
+            <ImageIcon className="w-7 h-7 mx-auto text-slate-400 opacity-70" />
+            <p className="text-xs font-bold text-slate-700">Ground Evidence Record</p>
+            <p className="text-[11px] text-slate-500">Citizen reported issue with location GPS metadata: {challenge.location}</p>
+          </div>
         )}
+
 
         {challenge.evidence?.length > 0 && (
           <div className="mb-6">
@@ -718,8 +740,211 @@ const ChallengeDetail = () => {
         )}
       </div>
 
+      {/* Scope & Budget Revision Requests Section */}
+
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-600" />
+              Scope & Budget Revision Requests ({scopeRevisions.length})
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Formal change orders submitted when unforeseen ground conditions (e.g. monsoon erosion) alter project scope.
+            </p>
+          </div>
+
+          {user && (user.role === 'institution' || user.role === 'admin') && challenge.status === 'In Progress' && (
+            <button
+              onClick={() => setShowRevisionModal(!showRevisionModal)}
+              className="px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5"
+            >
+              <AlertCircle className="w-4 h-4" /> Request Scope & Budget Revision
+            </button>
+          )}
+        </div>
+
+        {/* Modal / Form for requesting scope revision */}
+        {showRevisionModal && (
+          <form onSubmit={handleSubmitScopeRevision} className="bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 space-y-4 shadow-lg">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h4 className="text-sm font-extrabold uppercase tracking-wider text-amber-400">
+                Submit Scope & Budget Revision Request
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowRevisionModal(false)}
+                className="text-xs text-slate-400 hover:text-white"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  Reason for Scope Revision *
+                </label>
+                <select
+                  value={revisionReason}
+                  onChange={(e) => setRevisionReason(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-slate-700 bg-slate-800 text-white rounded-lg focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="Unforeseen Weather / Monsoon Damage">Unforeseen Weather / Monsoon Damage</option>
+                  <option value="Underground Utility / Structural Breakdown">Underground Utility / Structural Breakdown</option>
+                  <option value="Material & Transport Price Surge">Material & Transport Price Surge</option>
+                  <option value="Safety Hazard Expansion">Safety Hazard Expansion</option>
+                  <option value="Other Technical Adaptation">Other Technical Adaptation</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  Revised Cost Estimate *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={revisedCost}
+                  onChange={(e) => setRevisedCost(e.target.value)}
+                  placeholder="e.g. ₹30,000 (illustrative)"
+                  className="w-full px-3 py-2 text-sm border border-slate-700 bg-slate-800 text-white rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                Revised Timeline
+              </label>
+              <input
+                type="text"
+                value={revisedTimeline}
+                onChange={(e) => setRevisedTimeline(e.target.value)}
+                placeholder="e.g. 30 days"
+                className="w-full px-3 py-2 text-sm border border-slate-700 bg-slate-800 text-white rounded-lg focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                Detailed Justification & Technical Explanation *
+              </label>
+              <textarea
+                required
+                rows={3}
+                value={revisionJustification}
+                onChange={(e) => setRevisionJustification(e.target.value)}
+                placeholder="Explain why the scope expanded (e.g. Heavy monsoon rains doubled the road erosion surface area requiring additional asphalt)..."
+                className="w-full px-3 py-2 text-sm border border-slate-700 bg-slate-800 text-white rounded-lg focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                Attach Photo Evidence of Expanded Damage (Optional, up to 4)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => setRevisionEvidenceFiles(Array.from(e.target.files).slice(0, 4))}
+                className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950"
+              />
+            </div>
+
+            <div className="pt-2 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowRevisionModal(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submittingRevision}
+                className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs rounded-lg shadow disabled:opacity-50"
+              >
+                {submittingRevision ? 'Submitting Request...' : 'Submit Revision for Admin Review'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* List of Scope Revisions */}
+        {scopeRevisions.length === 0 ? (
+          <p className="text-sm text-slate-500 italic py-2">No scope revision requests filed for this challenge.</p>
+        ) : (
+          <div className="space-y-4">
+            {scopeRevisions.map((rev) => (
+              <div key={rev._id} className="p-5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <span className="font-bold text-slate-900 text-sm">
+                      {rev.requestedBy?.organization || rev.requestedBy?.name || 'Institution Partner'}
+                    </span>
+                    <span className="text-xs text-slate-500 block">
+                      Requested on: {new Date(rev.createdAt).toLocaleDateString('en-IN')}
+                    </span>
+                  </div>
+
+                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                    rev.status === 'Approved' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                    rev.status === 'Rejected' ? 'bg-rose-100 text-rose-800 border border-rose-300' :
+                    'bg-amber-100 text-amber-800 border border-amber-300'
+                  }`}>
+                    {rev.status === 'Approved' ? '✓ Revision Approved by Admin' : rev.status === 'Rejected' ? '❌ Revision Rejected' : '⏳ Pending Admin Review'}
+                  </span>
+                </div>
+
+                <div className="bg-white p-3 rounded-lg border border-slate-200 text-xs space-y-1">
+                  <div className="flex flex-wrap items-center gap-4 font-semibold text-slate-700">
+                    <span>Reason: <strong className="text-amber-800 font-bold">{rev.reason}</strong></span>
+                    <span>Budget Shift: <del className="text-slate-400">{rev.originalCost}</del> → <strong className="text-emerald-700 font-bold text-sm">{rev.revisedCost}</strong></span>
+                    {rev.revisedTimeline && <span>New Timeline: <strong className="text-indigo-700">{rev.revisedTimeline}</strong></span>}
+                  </div>
+                  <p className="text-slate-600 mt-1"><strong>Justification:</strong> {rev.justification}</p>
+                </div>
+
+                {rev.evidenceImages?.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    {rev.evidenceImages.map((imgUrl, idx) => (
+                      <div key={idx} className="rounded-lg overflow-hidden h-24 border border-slate-200">
+                        <img src={getImageUrl(imgUrl)} alt="Revision evidence" className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Admin Actions */}
+                {user && user.role === 'admin' && rev.status === 'Pending' && (
+                  <div className="pt-2 flex items-center gap-2 border-t border-slate-200">
+                    <button
+                      onClick={() => handleReviewScopeRevision(rev._id, 'Approved', 'Approved after reviewing ground evidence of monsoon erosion.')}
+                      disabled={reviewingRevisionId === rev._id}
+                      className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-sm disabled:opacity-50"
+                    >
+                      ✓ Approve Revision & Update Budget
+                    </button>
+                    <button
+                      onClick={() => handleReviewScopeRevision(rev._id, 'Rejected', 'Rejected by Admin. Work must proceed under original proposal parameters.')}
+                      disabled={reviewingRevisionId === rev._id}
+                      className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-lg shadow-sm disabled:opacity-50"
+                    >
+                      ❌ Reject Revision
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Community Comments Section */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
+
         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-brand-600" />
           Community Discussion ({comments.length})
