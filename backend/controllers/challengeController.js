@@ -56,10 +56,6 @@ const createChallenge = async (req, res) => {
       });
     }
 
-    if (!affectedWho?.trim()) {
-      return res.status(400).json({ message: 'Describe who is affected (households, school children, farmers, etc.)' });
-    }
-
     if (!severity) {
       return res.status(400).json({ message: 'Severity is required' });
     }
@@ -108,7 +104,7 @@ const createChallenge = async (req, res) => {
       latitude: latitude ? Number(latitude) : null,
       longitude: longitude ? Number(longitude) : null,
       regionType: regionType || 'Rural',
-      affectedWho: affectedWho.trim(),
+      affectedWho: (affectedWho || '').trim(),
       localContext: (localContext || '').trim(),
       baselineMetric: (baselineMetric || '').trim(),
       category,

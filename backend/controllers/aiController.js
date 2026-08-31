@@ -1,7 +1,7 @@
 /**
  * AI Controller for Samadhan Setu
- * Analyzes reported challenges to suggest Category, Urgency/Severity, Rationale, and Executive Summary.
- * Generates full detailed descriptions and field metadata from minimal inputs (Title + Location).
+ * Reviews citizen-provided reports and suggests a category, severity, and concise title.
+ * It deliberately does not invent report facts or submit challenges.
  * Supports external LLM (Gemini/OpenAI) when API keys are configured, with a smart offline NLP fallback engine.
  */
 
@@ -45,6 +45,33 @@ const KEYWORD_CATEGORY_MAP = [
 const CRITICAL_KEYWORDS = ['live wire', 'emergency', 'death', 'die', 'fatal', 'accident', 'electric shock', 'collapse', 'poison', 'toxic', 'fire', 'children in danger', 'school gate', 'drowning', 'landslide'];
 const HIGH_KEYWORDS = ['hazard', 'severe', 'heavy leakage', 'outbreak', 'no water', 'contaminate', 'broken bridge', 'blocked drain', 'major', 'disease', 'urgent', 'school', 'hospital'];
 const MEDIUM_KEYWORDS = ['flickering', 'damaged', 'overflow', 'uncollected', 'slow', 'inconvenience', 'pothole', 'smell', 'leak'];
+
+const SEVERITIES = ['Low', 'Medium', 'High', 'Critical'];
+
+const buildQualityChecks = ({ title, location, description }) => {
+  const checks = [];
+  if (!description.trim() || description.trim().length < 20) {
+    checks.push('Add one sentence explaining what happened and how it affects people.');
+  }
+  if (!location.trim() || location.split(',').filter(Boolean).length < 3) {
+    checks.push('Include village/ward, district, and state in the location.');
+  }
+  if (!title.trim()) {
+    checks.push('Review the suggested title before submitting.');
+  }
+  return checks;
+};
+
+const toReportReview = (result, input) => ({
+  category: CATEGORIES.includes(result.category) ? result.category : 'Other',
+  severity: SEVERITIES.includes(result.severity) ? result.severity : 'Medium',
+  reasoning: result.reasoning || result.urgencyReason || 'Review this suggested severity before submitting.',
+  suggestedTitle: String(result.suggestedTitle || result.suggestedSummary || input.title || input.description)
+    .trim()
+    .slice(0, 120),
+  qualityChecks: buildQualityChecks(input),
+  source: result.source || 'Smart report review',
+});
 
 // Rule-based NLP analysis fallback engine
 const analyzeWithRuleEngine = (title, location, userDescription) => {
@@ -105,6 +132,7 @@ const analyzeWithRuleEngine = (title, location, userDescription) => {
     category: matchedCategory,
     severity,
     urgencyReason,
+    suggestedTitle: title.trim() || userDescription.trim().split(/[.!?]/)[0].trim(),
     suggestedSummary: summary,
     description: generatedDescription,
     affectedWho: `Local residents, students, and neighboring households in ${locality}`,
@@ -118,7 +146,7 @@ const analyzeWithRuleEngine = (title, location, userDescription) => {
 };
 
 /**
- * @desc    AI Auto-Categorization & Field Auto-Generation Endpoint
+ * @desc    AI report-quality review endpoint
  * @route   POST /api/challenges/ai-analyze
  * @access  Private (Citizen / Any logged in user)
  */
@@ -126,15 +154,15 @@ const analyzeChallengeAI = async (req, res) => {
   try {
     const { title = '', location = '', description = '' } = req.body;
 
-    if (!title.trim() && !location.trim() && !description.trim()) {
-      return res.status(400).json({ message: 'Please provide at least a title or location for AI generation.' });
+    if (!location.trim() || !description.trim()) {
+      return res.status(400).json({ message: 'Provide a location and a short description to check the report.' });
     }
 
-    // If Gemini API Key is present in environment, call Google Gemini REST API
+    // If Gemini API Key is present in environment, request suggestions only.
     if (process.env.GEMINI_API_KEY) {
       try {
         const prompt = `You are an AI assistant for Samadhan Setu, a societal challenge crowdsourcing platform in India.
-Auto-generate a full citizen challenge report based on minimal user input:
+Review this citizen report. Do not invent people affected, dates, counts, address fields, or facts not present in the input.
 Title: "${title}"
 Location: "${location}"
 User Description: "${description}"
@@ -146,15 +174,8 @@ Return ONLY a JSON object with exact keys:
 {
   "category": "<one of available categories>",
   "severity": "<one of available severities>",
-  "urgencyReason": "<1 sentence explaining severity>",
-  "suggestedSummary": "<1 sentence executive summary>",
-  "description": "<2-3 sentence detailed problem description>",
-  "affectedWho": "<1 sentence describing affected group>",
-  "localContext": "<1 sentence describing local context>",
-  "baselineMetric": "<1 sentence baseline impact metric>",
-  "locality": "<extracted village/ward/locality>",
-  "district": "<extracted district>",
-  "state": "<extracted state>"
+  "reasoning": "<one short sentence explaining the suggested severity>",
+  "suggestedTitle": "<concise title based only on the supplied information>"
 }`;
 
         const geminiRes = await fetch(
@@ -174,7 +195,7 @@ Return ONLY a JSON object with exact keys:
           const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
           if (jsonText) {
             const parsed = JSON.parse(jsonText);
-            return res.json({ ...parsed, source: 'Google Gemini 1.5' });
+            return res.json(toReportReview({ ...parsed, source: 'Google Gemini 1.5' }, { title, location, description }));
           }
         }
       } catch (geminiErr) {
@@ -184,7 +205,7 @@ Return ONLY a JSON object with exact keys:
 
     // Fallback to fast smart rule engine
     const result = analyzeWithRuleEngine(title, location, description);
-    return res.json(result);
+    return res.json(toReportReview(result, { title, location, description }));
   } catch (error) {
     console.error('Error in analyzeChallengeAI:', error);
     return res.status(500).json({ message: 'AI Analysis failed. Please select options manually.' });
