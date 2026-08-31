@@ -1,5 +1,6 @@
 const ProgressUpdate = require('../models/ProgressUpdate');
 const Challenge = require('../models/Challenge');
+const Proposal = require('../models/Proposal');
 
 // @desc    Post progress update with optional image
 // @route   POST /api/challenges/:id/progress
@@ -16,6 +17,14 @@ const postProgressUpdate = async (req, res) => {
     const challenge = await Challenge.findById(challengeId);
     if (!challenge) {
       return res.status(404).json({ message: 'Challenge not found' });
+    }
+
+    const selectedProposal = challenge.selectedProposal && await Proposal.findById(challenge.selectedProposal).select('submittedBy');
+    if (!selectedProposal) {
+      return res.status(400).json({ message: 'Progress can be posted only after an institution proposal is selected.' });
+    }
+    if (req.user.role !== 'admin' && String(selectedProposal.submittedBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: 'Only the institution with the selected proposal can post progress evidence.' });
     }
 
     let imagePath = '';

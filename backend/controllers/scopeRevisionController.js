@@ -29,6 +29,9 @@ const submitScopeRevision = async (req, res) => {
     if (!proposal) {
       return res.status(404).json({ message: 'Selected proposal not found' });
     }
+    if (req.user.role !== 'admin' && String(proposal.submittedBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: 'Only the institution with the selected proposal can request a scope revision.' });
+    }
 
     // Process uploaded evidence files if any
     let evidenceImages = [];

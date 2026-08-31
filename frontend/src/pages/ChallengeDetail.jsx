@@ -37,6 +37,12 @@ const ChallengeDetail = () => {
   const [timeline, setTimeline] = useState('15 days');
   const [submittingProposal, setSubmittingProposal] = useState(false);
 
+  // Execution progress state
+  const [progressText, setProgressText] = useState('');
+  const [progressImage, setProgressImage] = useState(null);
+  const [progressImagePreview, setProgressImagePreview] = useState('');
+  const [submittingProgress, setSubmittingProgress] = useState(false);
+
   // Scope & Budget Revision state
   const [scopeRevisions, setScopeRevisions] = useState([]);
   const [showRevisionModal, setShowRevisionModal] = useState(false);
@@ -294,6 +300,14 @@ const ChallengeDetail = () => {
         return 'bg-amber-100 text-amber-700';
     }
   };
+
+  const selectedInstitutionId = challenge?.selectedProposal?.submittedBy?._id || challenge?.selectedProposal?.submittedBy;
+  const canManageSelectedWork = Boolean(
+    user && (
+      user.role === 'admin' ||
+      (user.role === 'institution' && selectedInstitutionId && String(selectedInstitutionId) === String(user._id))
+    )
+  );
 
   if (loading) {
     return (
@@ -666,7 +680,7 @@ const ChallengeDetail = () => {
         </div>
 
         {/* Institution post progress form */}
-        {user && (user.role === 'institution' || user.role === 'admin') && challenge.status === 'In Progress' && (
+        {canManageSelectedWork && challenge.status === 'In Progress' && (
           <form onSubmit={handlePostProgress} className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
               Post New Execution Progress & Ground Evidence
@@ -759,7 +773,7 @@ const ChallengeDetail = () => {
             </p>
           </div>
 
-          {user && (user.role === 'institution' || user.role === 'admin') && challenge.status === 'In Progress' && (
+          {canManageSelectedWork && challenge.status === 'In Progress' && (
             <button
               onClick={() => setShowRevisionModal(!showRevisionModal)}
               className="px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5"

@@ -31,6 +31,13 @@ const InstitutionDashboard = () => {
     fetchDashboardData();
   }, []);
 
+  const assignedInProgressChallenges = user?.role === 'admin'
+    ? inProgressChallenges
+    : inProgressChallenges.filter((challenge) => {
+      const ownerId = challenge.selectedProposal?.submittedBy?._id || challenge.selectedProposal?.submittedBy;
+      return ownerId && String(ownerId) === String(user?._id);
+    });
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
@@ -56,16 +63,16 @@ const InstitutionDashboard = () => {
           <div>
             <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
               <Clock className="w-5 h-5 text-blue-600" />
-              Challenges In Progress ({inProgressChallenges.length})
+              Your Active Work ({assignedInProgressChallenges.length})
             </h2>
 
-            {inProgressChallenges.length === 0 ? (
+            {assignedInProgressChallenges.length === 0 ? (
               <div className="bg-white p-6 rounded-xl border border-slate-200 text-slate-500 text-sm text-center">
-                No active assigned challenges in progress at the moment.
+                No selected proposals are assigned to your institution at the moment.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {inProgressChallenges.map((challenge) => (
+                {assignedInProgressChallenges.map((challenge) => (
                   <div key={challenge._id} className="bg-white p-5 rounded-xl border border-blue-200 shadow-sm flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start mb-2">
