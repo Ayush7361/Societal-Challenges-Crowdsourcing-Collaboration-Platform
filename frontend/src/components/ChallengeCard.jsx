@@ -20,16 +20,34 @@ const ChallengeCard = ({ challenge }) => {
     }
   };
 
+  const getSeverityBadge = (severity) => {
+    switch (severity) {
+      case 'Critical':
+        return <span className="bg-rose-100 text-rose-800 text-[11px] font-bold px-2 py-0.5 rounded-md border border-rose-200 flex items-center gap-1">🚨 Critical</span>;
+      case 'High':
+        return <span className="bg-orange-100 text-orange-800 text-[11px] font-bold px-2 py-0.5 rounded-md border border-orange-200 flex items-center gap-1">🔴 High</span>;
+      case 'Medium':
+        return <span className="bg-amber-100 text-amber-800 text-[11px] font-medium px-2 py-0.5 rounded-md border border-amber-200">🟡 Medium</span>;
+      case 'Low':
+        return <span className="bg-slate-100 text-slate-700 text-[11px] font-medium px-2 py-0.5 rounded-md border border-slate-200">🟢 Low</span>;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden">
       <div className="p-5">
         
-        {/* Header Meta: Category & Status */}
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">
-            <Layers className="w-3 h-3 text-slate-400" />
-            {challenge.category}
-          </span>
+        {/* Header Meta: Category, Severity & Status */}
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">
+              <Layers className="w-3 h-3 text-slate-400" />
+              {challenge.category}
+            </span>
+            {getSeverityBadge(challenge.severity)}
+          </div>
           {getStatusBadge(challenge.status)}
         </div>
 

@@ -17,9 +17,10 @@ const {
 const { submitProposal, getProposals } = require('../controllers/proposalController');
 const { postProgressUpdate, getProgressUpdates } = require('../controllers/progressController');
 const { protect, authorize } = require('../middleware/auth');
-const upload = require('../middleware/upload');
+const { analyzeChallengeAI } = require('../controllers/aiController');
 
 // Base challenge routes
+router.post('/ai-analyze', protect, analyzeChallengeAI);
 router
   .route('/')
   .post(

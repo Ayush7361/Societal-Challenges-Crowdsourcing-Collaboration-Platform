@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import API from '../services/api';
 import LocationPickerMap from '../components/LocationPickerMap';
-import { PlusCircle, Upload, MapPin, Tag, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { PlusCircle, Upload, MapPin, Tag, CheckCircle2, ShieldAlert, Sparkles, BrainCircuit } from 'lucide-react';
 
 const CreateChallenge = () => {
   const navigate = useNavigate();
@@ -27,9 +27,35 @@ const CreateChallenge = () => {
   const [evidenceFiles, setEvidenceFiles] = useState([]);
   const [similar, setSimilar] = useState([]);
 
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState(null);
+  const [aiError, setAiError] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const handleAIAnalyze = async () => {
+    if (!title.trim() && !description.trim()) {
+      setAiError('Please enter a title or description first.');
+      return;
+    }
+    setAiLoading(true);
+    setAiError('');
+    setAiResult(null);
+
+    try {
+      const res = await API.post('/challenges/ai-analyze', { title, description });
+      setAiResult(res.data);
+      if (res.data.category) setCategory(res.data.category);
+      if (res.data.severity) setSeverity(res.data.severity);
+    } catch (err) {
+      console.error('AI Analysis Error:', err);
+      setAiError(err.response?.data?.message || 'AI analysis failed');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -372,6 +398,63 @@ const CreateChallenge = () => {
               placeholder="Background, when it started, and what support is needed..."
               className="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500"
             />
+          </div>
+
+          {/* AI Auto-Categorization & Urgency Assist Card */}
+          <div className="bg-slate-900 text-white rounded-xl p-4 shadow-sm space-y-3 border border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-400 shrink-0" />
+                <div>
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-300">Smart AI Assistant</h4>
+                  <p className="text-[11px] text-slate-300">Auto-detect Category & Urgency level from your title & description</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleAIAnalyze}
+                disabled={aiLoading}
+                className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold text-xs rounded-lg transition-all flex items-center justify-center gap-1.5 shadow disabled:opacity-50 shrink-0"
+              >
+                {aiLoading ? (
+                  <>Analyzing Issue...</>
+                ) : (
+                  <>
+                    <BrainCircuit className="w-4 h-4" /> ✨ AI Auto-Categorize & Urgency Analysis
+                  </>
+                )}
+              </button>
+            </div>
+
+            {aiError && (
+              <p className="text-xs text-rose-300 bg-rose-950/60 p-2 rounded border border-rose-800">{aiError}</p>
+            )}
+
+            {aiResult && (
+              <div className="bg-slate-800/90 rounded-lg p-3 text-xs space-y-2 border border-slate-700">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-slate-300">Auto-Selected Category: <strong className="text-amber-300 font-bold">{aiResult.category}</strong></span>
+                  <span className={`px-2.5 py-0.5 rounded-full font-extrabold uppercase text-[10px] ${
+                    aiResult.severity === 'Critical' ? 'bg-rose-600 text-white' :
+                    aiResult.severity === 'High' ? 'bg-orange-500 text-white' :
+                    aiResult.severity === 'Medium' ? 'bg-amber-400 text-slate-950' :
+                    'bg-emerald-500 text-white'
+                  }`}>
+                    {aiResult.severity} Severity
+                  </span>
+                </div>
+                <p className="text-slate-300 text-[11px] leading-relaxed"><strong className="text-slate-200">AI Rationale:</strong> {aiResult.urgencyReason}</p>
+                {aiResult.suggestedSummary && (
+                  <p className="text-slate-400 text-[11px]"><strong className="text-slate-300">Executive Summary:</strong> "{aiResult.suggestedSummary}"</p>
+                )}
+                {aiResult.source && (
+                  <div className="pt-1 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-700/60">
+                    <span>Engine: {aiResult.source}</span>
+                    <span className="text-emerald-400 font-semibold">✓ Auto-filled in form below</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
