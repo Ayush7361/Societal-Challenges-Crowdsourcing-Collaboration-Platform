@@ -56,10 +56,13 @@ router
   .post(protect, authorize('institution', 'admin'), submitProposal)
   .get(protect, getProposals);
 
-// Progress updates for challenge
+const { submitScopeRevision, getScopeRevisions } = require('../controllers/scopeRevisionController');
+
+// Scope & Budget Revisions for challenge
 router
-  .route('/:id/progress')
-  .post(protect, authorize('institution', 'admin'), upload.single('image'), postProgressUpdate)
-  .get(getProgressUpdates);
+  .route('/:id/scope-revisions')
+  .post(protect, authorize('institution', 'admin'), upload.array('evidence', 4), submitScopeRevision)
+  .get(protect, getScopeRevisions);
 
 module.exports = router;
+

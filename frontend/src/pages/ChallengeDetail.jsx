@@ -34,13 +34,63 @@ const ChallengeDetail = () => {
   const [timeline, setTimeline] = useState('15 days');
   const [submittingProposal, setSubmittingProposal] = useState(false);
 
-  // Progress update form state
-  const [progressText, setProgressText] = useState('');
-  const [progressImage, setProgressImage] = useState(null);
-  const [progressImagePreview, setProgressImagePreview] = useState('');
-  const [submittingProgress, setSubmittingProgress] = useState(false);
+  // Scope & Budget Revision state
+  const [scopeRevisions, setScopeRevisions] = useState([]);
+  const [showRevisionModal, setShowRevisionModal] = useState(false);
+  const [revisionReason, setRevisionReason] = useState('Unforeseen Weather / Monsoon Damage');
+  const [revisionJustification, setRevisionJustification] = useState('');
+  const [revisedCost, setRevisedCost] = useState('₹30,000');
+  const [revisedTimeline, setRevisedTimeline] = useState('30 days');
+  const [revisionEvidenceFiles, setRevisionEvidenceFiles] = useState([]);
+  const [submittingRevision, setSubmittingRevision] = useState(false);
+  const [reviewingRevisionId, setReviewingRevisionId] = useState(null);
+
+  const handleSubmitScopeRevision = async (e) => {
+    e.preventDefault();
+    if (!revisionJustification.trim() || !revisedCost.trim()) {
+      alert('Justification and revised cost are required.');
+      return;
+    }
+    setSubmittingRevision(true);
+    try {
+      const formData = new FormData();
+      formData.append('reason', revisionReason);
+      formData.append('justification', revisionJustification.trim());
+      formData.append('revisedCost', revisedCost.trim());
+      formData.append('revisedTimeline', revisedTimeline.trim());
+      revisionEvidenceFiles.forEach((f) => formData.append('evidence', f));
+
+      await API.post(`/challenges/${id}/scope-revisions`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      setMsg('Scope & Budget Revision request submitted successfully! Awaiting Admin review.');
+      setShowRevisionModal(false);
+      setRevisionJustification('');
+      setRevisionEvidenceFiles([]);
+      fetchChallengeDetails();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to submit scope revision request');
+    } finally {
+      setSubmittingRevision(false);
+    }
+  };
+
+  const handleReviewScopeRevision = async (revisionId, status, adminNote = '') => {
+    setReviewingRevisionId(revisionId);
+    try {
+      await API.patch(`/scope-revisions/${revisionId}/review`, { status, adminNote });
+      setMsg(`Scope Revision Request ${status} successfully!`);
+      fetchChallengeDetails();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to review scope revision request');
+    } finally {
+      setReviewingRevisionId(null);
+    }
+  };
 
   const fetchChallengeDetails = async () => {
+
     try {
       const res = await API.get(`/challenges/${id}`);
       setChallenge(res.data);
@@ -77,7 +127,7 @@ const ChallengeDetail = () => {
         setSimilar([]);
       }
 
-      // Fetch proposals if user is logged in
+      // Fetch proposals & scope revisions if user is logged in
       if (user) {
         try {
           const propRes = await API.get(`/challenges/${id}/proposals`);
@@ -87,12 +137,20 @@ const ChallengeDetail = () => {
         }
 
         try {
+          const revRes = await API.get(`/challenges/${id}/scope-revisions`);
+          setScopeRevisions(revRes.data || []);
+        } catch (e) {
+          setScopeRevisions([]);
+        }
+
+        try {
           const voteRes = await API.get(`/challenges/${id}/hasVoted`);
           setHasVoted(voteRes.data.hasVoted);
         } catch (e) {
           // ignore
         }
       }
+
 
     } catch (err) {
       console.error('Error fetching challenge details:', err);
@@ -283,8 +341,35 @@ const ChallengeDetail = () => {
         </div>
       )}
 
+      {scopeRevisions.some((r) => r.status === 'Approved') && (
+        <div className="bg-gradient-to-r from-amber-950 via-slate-900 to-amber-950 text-white rounded-2xl p-5 shadow-md border border-amber-600/40 space-y-2">
+          <div className="flex items-center gap-2 text-amber-400 font-extrabold text-xs uppercase tracking-wider">
+            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+            Public Governance Note: Contract Budget & Scope Revised
+          </div>
+          {(() => {
+            const approvedRev = scopeRevisions.find((r) => r.status === 'Approved');
+            return (
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span>Official Budget Adjusted: <del className="text-slate-400">{approvedRev.originalCost}</del> → <strong className="text-amber-300 font-bold text-base">{approvedRev.revisedCost}</strong></span>
+                  {approvedRev.revisedTimeline && (
+                    <span className="text-xs text-amber-200 bg-amber-900/60 px-2.5 py-1 rounded border border-amber-700/50">⏱️ New Timeline: {approvedRev.revisedTimeline}</span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-300 italic pt-1">
+                  <strong className="text-amber-200 uppercase text-[10px] not-italic mr-1">Justification:</strong>
+                  "{approvedRev.reason}" — {approvedRev.justification} (Approved by Admin)
+                </p>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
       {/* Main Detail Header Card */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm">
+
 
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <span className="text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-md">

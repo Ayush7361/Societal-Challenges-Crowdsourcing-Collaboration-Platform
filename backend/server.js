@@ -12,6 +12,7 @@ const authRoutes = require('./routes/authRoutes');
 const challengeRoutes = require('./routes/challengeRoutes');
 const proposalRoutes = require('./routes/proposalRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const scopeRevisionRoutes = require('./routes/scopeRevisionRoutes');
 
 const app = express();
 
@@ -28,6 +29,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/scope-revisions', scopeRevisionRoutes);
+
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
