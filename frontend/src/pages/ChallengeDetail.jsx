@@ -16,6 +16,7 @@ const ChallengeDetail = () => {
 
   const [imageError, setImageError] = useState(false);
   const [challenge, setChallenge] = useState(null);
+  const coverUrl = getChallengeCoverUrl(challenge);
 
   const [proposals, setProposals] = useState([]);
   const [progressUpdates, setProgressUpdates] = useState([]);
@@ -165,6 +166,10 @@ const ChallengeDetail = () => {
   useEffect(() => {
     fetchChallengeDetails();
   }, [id, user]);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [coverUrl]);
 
   const handleVote = async () => {
     if (!user) {
@@ -398,12 +403,12 @@ const ChallengeDetail = () => {
           {challenge.description}
         </p>
 
-        {getChallengeCoverUrl(challenge) ? (
+        {coverUrl ? (
           <div className="mb-6">
             <div className="rounded-xl overflow-hidden min-h-[200px] border border-slate-200 bg-slate-900 relative group flex items-center justify-center">
               {!imageError ? (
                 <img
-                  src={getChallengeCoverUrl(challenge)}
+                  src={coverUrl}
                   alt={challenge.title}
                   className="w-full max-h-96 object-contain bg-slate-950"
                   onError={() => setImageError(true)}

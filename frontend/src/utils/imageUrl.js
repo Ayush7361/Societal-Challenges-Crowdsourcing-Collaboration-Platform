@@ -8,7 +8,18 @@ const API_BASE =
 
 export const getApiBaseUrl = () => API_BASE;
 
-export const getServerOrigin = () => API_BASE.replace(/\/api\/?$/, '');
+export const getServerOrigin = () => {
+  // A relative API base (such as `/api`) is served through Vite/Vercel's proxy,
+  // so uploaded files must remain rooted at the current origin as `/uploads`.
+  if (API_BASE.startsWith('/')) return '';
+
+  try {
+    return new URL(API_BASE).origin;
+  } catch {
+    // Keep a predictable fallback for malformed local configuration.
+    return API_BASE.replace(/\/api\/?$/, '');
+  }
+};
 
 export const getImageUrl = (imagePath) => {
   if (!imagePath) return '';

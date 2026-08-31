@@ -1,6 +1,7 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const ImageFile = require('../models/ImageFile');
 
 const uploadDir = path.join(__dirname, '../uploads');
@@ -14,7 +15,9 @@ const storage = multer.diskStorage({
   },
   filename(req, file, cb) {
     const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${Date.now()}${ext}`);
+    // Date.now() alone can collide when Multer receives several evidence files
+    // in the same millisecond. A random suffix keeps each stored path unique.
+    cb(null, `${file.fieldname}-${Date.now()}-${crypto.randomUUID()}${ext}`);
   },
 });
 

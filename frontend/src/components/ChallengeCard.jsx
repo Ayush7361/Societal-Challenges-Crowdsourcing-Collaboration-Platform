@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, ThumbsUp, Calendar, ArrowRight, Layers, ShieldCheck, Image as ImageIcon } from 'lucide-react';
 import { getChallengeCoverUrl } from '../utils/imageUrl';
@@ -6,6 +6,13 @@ import { getChallengeCoverUrl } from '../utils/imageUrl';
 const ChallengeCard = ({ challenge }) => {
   const [imageError, setImageError] = useState(false);
   const coverUrl = getChallengeCoverUrl(challenge);
+
+  // A card can stay mounted while its challenge data is refreshed. Retry when a
+  // newly persisted upload (or evidence fallback) changes the resolved URL.
+  useEffect(() => {
+    setImageError(false);
+  }, [coverUrl]);
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Pending':
