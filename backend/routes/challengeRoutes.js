@@ -30,6 +30,7 @@ router
       { name: 'image', maxCount: 1 },
       { name: 'evidence', maxCount: 4 },
     ]),
+    upload.persistUploadedFiles,
     createChallenge
   )
   .get(getChallenges);
@@ -56,12 +57,23 @@ router
   .post(protect, authorize('institution', 'admin'), submitProposal)
   .get(protect, getProposals);
 
+router
+  .route('/:id/progress')
+  .post(
+    protect,
+    authorize('institution', 'admin'),
+    upload.single('image'),
+    upload.persistUploadedFiles,
+    postProgressUpdate
+  )
+  .get(getProgressUpdates);
+
 const { submitScopeRevision, getScopeRevisions } = require('../controllers/scopeRevisionController');
 
 // Scope & Budget Revisions for challenge
 router
   .route('/:id/scope-revisions')
-  .post(protect, authorize('institution', 'admin'), upload.array('evidence', 4), submitScopeRevision)
+  .post(protect, authorize('institution', 'admin'), upload.array('evidence', 4), upload.persistUploadedFiles, submitScopeRevision)
   .get(protect, getScopeRevisions);
 
 module.exports = router;

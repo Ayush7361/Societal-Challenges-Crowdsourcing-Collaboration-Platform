@@ -4,7 +4,7 @@ import API from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import StatusTimeline from '../components/StatusTimeline';
 import ChallengeMapDisplay from '../components/ChallengeMapDisplay';
-import { getImageUrl } from '../utils/imageUrl';
+import { getImageUrl, getChallengeCoverUrl } from '../utils/imageUrl';
 import {
   MapPin, ThumbsUp, MessageSquare, Building2, ShieldCheck,
   CheckCircle2, Clock, Upload, ArrowLeft, Send, Sparkles, AlertCircle, Image as ImageIcon
@@ -398,12 +398,12 @@ const ChallengeDetail = () => {
           {challenge.description}
         </p>
 
-        {challenge.image ? (
+        {getChallengeCoverUrl(challenge) ? (
           <div className="mb-6">
             <div className="rounded-xl overflow-hidden min-h-[200px] border border-slate-200 bg-slate-900 relative group flex items-center justify-center">
               {!imageError ? (
                 <img
-                  src={getImageUrl(challenge.image)}
+                  src={getChallengeCoverUrl(challenge)}
                   alt={challenge.title}
                   className="w-full max-h-96 object-contain bg-slate-950"
                   onError={() => setImageError(true)}
@@ -731,7 +731,7 @@ const ChallengeDetail = () => {
                 <p className="text-sm text-slate-700">{update.text}</p>
                 {update.image && (
                   <div className="rounded-lg overflow-hidden h-44 max-w-md border border-slate-200 mt-2">
-                    <img src={update.image} alt="Progress evidence" className="w-full h-full object-cover" />
+                    <img src={getImageUrl(update.image)} alt="Progress evidence" className="w-full h-full object-cover" />
                   </div>
                 )}
               </div>

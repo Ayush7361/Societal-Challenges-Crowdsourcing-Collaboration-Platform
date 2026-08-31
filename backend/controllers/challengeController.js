@@ -91,6 +91,10 @@ const createChallenge = async (req, res) => {
       return res.status(400).json({ message: 'At least one photo of ground evidence is required' });
     }
 
+    if (!imagePath && evidencePaths.length > 0) {
+      imagePath = evidencePaths[0];
+    }
+
     const initialStatus = 'Pending';
     const challenge = await Challenge.create({
       title,

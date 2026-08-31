@@ -14,15 +14,18 @@ const proposalRoutes = require('./routes/proposalRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const scopeRevisionRoutes = require('./routes/scopeRevisionRoutes');
 
+const upload = require('./middleware/upload');
+
 const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
-// Serve static uploads
+// Serve static uploads from disk, then MongoDB if the file is missing
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.get('/uploads/:filename', upload.serveUploadedImage);
 
 // Routes
 app.use('/api/auth', authRoutes);

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, ThumbsUp, Calendar, ArrowRight, Layers, ShieldCheck, Image as ImageIcon } from 'lucide-react';
-import { getImageUrl } from '../utils/imageUrl';
+import { getChallengeCoverUrl } from '../utils/imageUrl';
 
 const ChallengeCard = ({ challenge }) => {
   const [imageError, setImageError] = useState(false);
+  const coverUrl = getChallengeCoverUrl(challenge);
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Pending':
@@ -39,6 +40,30 @@ const ChallengeCard = ({ challenge }) => {
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden">
+      {coverUrl ? (
+        <div className="h-44 bg-slate-100 border-b border-slate-200 relative group overflow-hidden">
+          {!imageError ? (
+            <img
+              src={coverUrl}
+              alt={challenge.title}
+              className="block w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="w-full h-44 flex flex-col items-center justify-center bg-slate-100 text-slate-400 gap-1 text-xs">
+              <ImageIcon className="w-6 h-6 opacity-40" />
+              <span>Ground Evidence Photo</span>
+            </div>
+          )}
+          {challenge.exifVerified && (
+            <div className="absolute top-2 left-2 bg-slate-900/85 backdrop-blur-md text-emerald-400 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-500/40 flex items-center gap-1 shadow">
+              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              Geotag Verified
+            </div>
+          )}
+        </div>
+      ) : null}
+
       <div className="p-5">
         
         {/* Header Meta: Category, Severity & Status */}
@@ -62,33 +87,6 @@ const ChallengeCard = ({ challenge }) => {
         <p className="text-slate-600 text-sm mb-4 line-clamp-2 leading-relaxed">
           {challenge.description}
         </p>
-
-        {/* Image Preview if available */}
-        {challenge.image ? (
-          <div className="mb-4 rounded-lg overflow-hidden h-40 bg-slate-100 border border-slate-200 relative group">
-            {!imageError ? (
-              <img
-                src={getImageUrl(challenge.image)}
-                alt={challenge.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400 gap-1 text-xs">
-                <ImageIcon className="w-6 h-6 opacity-40" />
-                <span>Ground Evidence Photo</span>
-              </div>
-            )}
-
-            {/* EXIF Geotag Verification Badge Overlay */}
-            {challenge.exifVerified && (
-              <div className="absolute top-2 left-2 bg-slate-900/85 backdrop-blur-md text-emerald-400 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-500/40 flex items-center gap-1 shadow">
-                <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                Geotag Verified
-              </div>
-            )}
-          </div>
-        ) : null}
 
         {/* Location & Author */}
         <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 mb-4 border-t border-slate-100 pt-3">

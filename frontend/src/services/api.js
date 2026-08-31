@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { getApiBaseUrl } from '../utils/imageUrl';
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://samadhan-setu-kn61.onrender.com/api',
+  baseURL: getApiBaseUrl(),
 });
 
 // Interceptor to attach Authorization JWT token automatically

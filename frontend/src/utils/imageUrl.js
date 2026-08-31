@@ -1,19 +1,33 @@
 /**
  * Resolves full image URL for uploaded evidence photos.
- * Converts relative backend paths (/uploads/file.jpg) into full backend server URLs
- * (e.g. http://localhost:5000/uploads/file.jpg or https://backend.domain.com/uploads/file.jpg).
+ * Converts relative backend paths (/uploads/file.jpg) into full backend server URLs.
+ * Must use the same API origin as axios (see services/api.js) so card photos load.
  */
+const API_BASE =
+  import.meta.env.VITE_API_URL || 'https://samadhan-setu-kn61.onrender.com/api';
+
+export const getApiBaseUrl = () => API_BASE;
+
+export const getServerOrigin = () => API_BASE.replace(/\/api\/?$/, '');
+
 export const getImageUrl = (imagePath) => {
   if (!imagePath) return '';
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('blob:')) {
+  if (
+    imagePath.startsWith('http://') ||
+    imagePath.startsWith('https://') ||
+    imagePath.startsWith('blob:') ||
+    imagePath.startsWith('data:')
+  ) {
     return imagePath;
   }
 
-  // Derive backend base origin from VITE_API_URL or fallback to http://localhost:5000
-  let apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  // Strip trailing /api or /api/
-  const serverOrigin = apiBase.replace(/\/api\/?$/, '');
-
   const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-  return `${serverOrigin}${cleanPath}`;
+  return `${getServerOrigin()}${cleanPath}`;
+};
+
+/** Cover photo: primary image, or first additional evidence file. */
+export const getChallengeCoverUrl = (challenge) => {
+  if (!challenge) return '';
+  const path = challenge.image || challenge.evidence?.[0] || '';
+  return getImageUrl(path);
 };
