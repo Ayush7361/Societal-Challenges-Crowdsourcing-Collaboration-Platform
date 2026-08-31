@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, ThumbsUp, Calendar, ArrowRight, Layers } from 'lucide-react';
+import { MapPin, ThumbsUp, Calendar, ArrowRight, Layers, ShieldCheck, Image as ImageIcon } from 'lucide-react';
+import { getImageUrl } from '../utils/imageUrl';
 
 const ChallengeCard = ({ challenge }) => {
+  const [imageError, setImageError] = useState(false);
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Pending':
@@ -62,16 +64,31 @@ const ChallengeCard = ({ challenge }) => {
         </p>
 
         {/* Image Preview if available */}
-        {challenge.image && (
-          <div className="mb-4 rounded-lg overflow-hidden h-36 bg-slate-100 border border-slate-200">
-            <img
-              src={challenge.image}
-              alt={challenge.title}
-              className="w-full h-full object-cover"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
+        {challenge.image ? (
+          <div className="mb-4 rounded-lg overflow-hidden h-40 bg-slate-100 border border-slate-200 relative group">
+            {!imageError ? (
+              <img
+                src={getImageUrl(challenge.image)}
+                alt={challenge.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400 gap-1 text-xs">
+                <ImageIcon className="w-6 h-6 opacity-40" />
+                <span>Ground Evidence Photo</span>
+              </div>
+            )}
+
+            {/* EXIF Geotag Verification Badge Overlay */}
+            {challenge.exifVerified && (
+              <div className="absolute top-2 left-2 bg-slate-900/85 backdrop-blur-md text-emerald-400 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-500/40 flex items-center gap-1 shadow">
+                <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                Geotag Verified
+              </div>
+            )}
           </div>
-        )}
+        ) : null}
 
         {/* Location & Author */}
         <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 mb-4 border-t border-slate-100 pt-3">

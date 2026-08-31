@@ -1,7 +1,9 @@
+const path = require('path');
 const Challenge = require('../models/Challenge');
 const Vote = require('../models/Vote');
 const Comment = require('../models/Comment');
 const GroundCheck = require('../models/GroundCheck');
+const { extractAndVerifyExif } = require('../utils/exifHelper');
 
 const VAGUE_LOCATION_RE = /^(india|here|nearby|local|my (area|village|city)|water shortage)$/i;
 
@@ -68,8 +70,16 @@ const createChallenge = async (req, res) => {
     }
 
     let imagePath = '';
+    let exifData = { exifLatitude: null, exifLongitude: null, exifVerified: false, exifDistanceKm: null };
+
     if (req.files?.image?.[0]) {
-      imagePath = `/uploads/${req.files.image[0].filename}`;
+      const file = req.files.image[0];
+      imagePath = `/uploads/${file.filename}`;
+      exifData = await extractAndVerifyExif(
+        file.path,
+        latitude ? Number(latitude) : null,
+        longitude ? Number(longitude) : null
+      );
     }
 
     let evidencePaths = [];
@@ -99,7 +109,12 @@ const createChallenge = async (req, res) => {
       baselineMetric: (baselineMetric || '').trim(),
       category,
       image: imagePath,
+      exifLatitude: exifData.exifLatitude,
+      exifLongitude: exifData.exifLongitude,
+      exifVerified: exifData.exifVerified,
+      exifDistanceKm: exifData.exifDistanceKm,
       severity: severity || 'Medium',
+
       affectedCount: Number(affectedCount) || 0,
       evidence: evidencePaths,
       status: initialStatus,

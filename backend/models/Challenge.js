@@ -110,7 +110,24 @@ const ChallengeSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
+  exifLatitude: {
+    type: Number,
+    default: null,
+  },
+  exifLongitude: {
+    type: Number,
+    default: null,
+  },
+  exifVerified: {
+    type: Boolean,
+    default: false,
+  },
+  exifDistanceKm: {
+    type: Number,
+    default: null,
+  },
   status: {
+
     type: String,
     enum: ['Pending', 'Open', 'Under Review', 'In Progress', 'Resolved'],
     default: 'Pending',

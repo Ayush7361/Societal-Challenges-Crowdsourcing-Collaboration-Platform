@@ -4,6 +4,7 @@ import API from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import StatusTimeline from '../components/StatusTimeline';
 import ChallengeMapDisplay from '../components/ChallengeMapDisplay';
+import { getImageUrl } from '../utils/imageUrl';
 import {
   MapPin, ThumbsUp, MessageSquare, Building2, ShieldCheck,
   CheckCircle2, Clock, Upload, ArrowLeft, Send, Sparkles, AlertCircle
@@ -311,8 +312,21 @@ const ChallengeDetail = () => {
         </p>
 
         {challenge.image && (
-          <div className="mb-6 rounded-xl overflow-hidden max-h-96 border border-slate-200 bg-slate-100">
-            <img src={challenge.image} alt={challenge.title} className="w-full h-full object-cover" />
+          <div className="mb-6">
+            <div className="rounded-xl overflow-hidden max-h-96 border border-slate-200 bg-slate-100 relative">
+              <img src={getImageUrl(challenge.image)} alt={challenge.title} className="w-full h-full object-cover" />
+            </div>
+            {challenge.exifVerified && (
+              <div className="mt-2 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-lg p-3 text-xs flex flex-wrap items-center justify-between gap-2 shadow-sm">
+                <div className="flex items-center gap-2 font-bold">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Geotag Verified: Photo GPS coordinates match reported location {challenge.exifDistanceKm ? `(${challenge.exifDistanceKm} km away)` : '(On-Site Match)'}</span>
+                </div>
+                {challenge.exifLatitude && challenge.exifLongitude && (
+                  <span className="text-[11px] text-emerald-700 font-mono bg-emerald-100/80 px-2 py-0.5 rounded">📍 Photo EXIF: {challenge.exifLatitude}, {challenge.exifLongitude}</span>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -324,7 +338,7 @@ const ChallengeDetail = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {challenge.evidence.map((url, i) => (
                 <div key={i} className="rounded-lg overflow-hidden h-24 border border-slate-200 bg-slate-100">
-                  <img src={url} alt={`evidence-${i}`} className="w-full h-full object-cover" />
+                  <img src={getImageUrl(url)} alt={`evidence-${i}`} className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
